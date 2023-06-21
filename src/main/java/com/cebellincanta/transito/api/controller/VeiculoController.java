@@ -1,5 +1,6 @@
 package com.cebellincanta.transito.api.controller;
 
+import com.cebellincanta.transito.api.model.VeiculoModel;
 import com.cebellincanta.transito.domain.exception.NegocioExpection;
 import com.cebellincanta.transito.domain.model.Proprietario;
 import com.cebellincanta.transito.domain.model.Veiculo;
@@ -28,8 +29,20 @@ public class VeiculoController {
     }
 
     @GetMapping("/{veiculoId}")
-    public ResponseEntity<Veiculo> buscar(@PathVariable Long veiculoId) {
+    public ResponseEntity<VeiculoModel> buscar(@PathVariable Long veiculoId) {
         return veiculoRepository.findById(veiculoId)
+                .map(veiculo -> {
+                    var veiculoModel = new VeiculoModel();
+                    veiculoModel.setId(veiculo.getId());
+                    veiculoModel.setNomeProprietario(veiculo.getProprietario().getNome());
+                    veiculoModel.setMarca(veiculo.getMarca());
+                    veiculoModel.setModelo(veiculo.getModelo());
+                    veiculoModel.setPlaca(veiculo.getModelo());
+                    veiculoModel.setStatus(veiculo.getStatus());
+                    veiculoModel.setDataCadastro(veiculo.getDataCadastro());
+                    veiculoModel.setDataApreensao(veiculo.getDataApreensao());
+                    return veiculoModel;
+                })
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
