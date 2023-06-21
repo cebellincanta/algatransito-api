@@ -1,5 +1,6 @@
 package com.cebellincanta.transito.api.controller;
 
+import com.cebellincanta.transito.api.assembler.VeiculoAssembler;
 import com.cebellincanta.transito.api.model.VeiculoModel;
 import com.cebellincanta.transito.domain.exception.NegocioExpection;
 import com.cebellincanta.transito.domain.model.Proprietario;
@@ -8,6 +9,7 @@ import com.cebellincanta.transito.domain.repository.VeiculoRepository;
 import com.cebellincanta.transito.domain.service.RegistroVeiculoService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,36 +23,26 @@ public class VeiculoController {
 
     private final VeiculoRepository veiculoRepository;
     private final RegistroVeiculoService registroVeiculoService;
+    private final VeiculoAssembler veiculoAssembler;
 
     @GetMapping
-    public List<Veiculo> listar()
+    public List<VeiculoModel> listar()
     {
-        return veiculoRepository.findAll();
+        return veiculoAssembler.toColletionModel(veiculoRepository.findAll());
     }
 
     @GetMapping("/{veiculoId}")
     public ResponseEntity<VeiculoModel> buscar(@PathVariable Long veiculoId) {
         return veiculoRepository.findById(veiculoId)
-                .map(veiculo -> {
-                    var veiculoModel = new VeiculoModel();
-                    veiculoModel.setId(veiculo.getId());
-                    veiculoModel.setNomeProprietario(veiculo.getProprietario().getNome());
-                    veiculoModel.setMarca(veiculo.getMarca());
-                    veiculoModel.setModelo(veiculo.getModelo());
-                    veiculoModel.setPlaca(veiculo.getModelo());
-                    veiculoModel.setStatus(veiculo.getStatus());
-                    veiculoModel.setDataCadastro(veiculo.getDataCadastro());
-                    veiculoModel.setDataApreensao(veiculo.getDataApreensao());
-                    return veiculoModel;
-                })
+                .map(veiculoAssembler::toModel)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Veiculo cadastrar(@Valid @RequestBody Veiculo veiculo) {
-        return registroVeiculoService.cadastrar(veiculo);
+    public VeiculoModel cadastrar(@Valid @RequestBody Veiculo veiculo) {
+        return veiculoAssembler.toModel(registroVeiculoService.cadastrar(veiculo));
     }
 
     @PutMapping("/{veiculoId}")
